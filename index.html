@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Webcam Stream</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: #000; }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    #status {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: #fff;
+      font-family: monospace;
+      background: rgba(0,0,0,0.5);
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="status">Loading...</div>
+  <video id="video" autoplay muted playsinline></video>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script>
+    const video = document.getElementById('video');
+    const status = document.getElementById('status');
+    const src = 'stream.m3u8?_=' + Date.now();
+
+    if (Hls.isSupported()) {
+      const hls = new Hls({
+        liveDurationInfinity: true,
+        lowLatencyMode: true,
+        liveBackBufferLength: 0,
+        liveSyncDurationCount: 1,
+        liveMaxLatencyDurationCount: 2,
+        xhrSetup: (xhr, url) => {
+          if (url.includes('.m3u8') || url.includes('.ts')) {
+            const sep = url.includes('?') ? '&' : '?';
+            xhr.open('GET', url + sep + '_=' + Date.now(), true);
+          }
+        }
+      });
+      hls.loadSource(src);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        status.textContent = 'Live';
+        video.play();
+      });
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        if (data.fatal) {
+          status.textContent = 'Stream unavailable';
+          setTimeout(() => location.reload(), 3000);
+        }
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = src;
+    }
+  </script>
+</body>
+</html>

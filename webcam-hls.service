@@ -1,0 +1,20 @@
+[Unit]
+Description=Webcam HLS streaming service
+
+[Service]
+User=__USER__
+Group=__USER__
+ExecStartPre=/bin/sh -c "rm -f __STREAM_DIR__/*.ts __STREAM_DIR__/*.m3u8"
+ExecStart=/usr/bin/ffmpeg -f v4l2 -input_format mjpeg -video_size 1920x1080 -framerate 10 -i __DEVICE__ \
+    -c:v libx264 -preset ultrafast -tune zerolatency -crf 23 -maxrate 2000k -bufsize 1000k \
+    -g 10 -keyint_min 10 -sc_threshold 0 \
+    -f hls -hls_time 0.5 -hls_list_size 2 -hls_flags delete_segments+omit_endlist+split_by_time \
+    -hls_segment_filename __STREAM_DIR__/segment_%%03d.ts \
+    __STREAM_DIR__/stream.m3u8
+ExecStopPost=/bin/sh -c "rm -f __STREAM_DIR__/*.ts __STREAM_DIR__/*.m3u8"
+Restart=always
+RestartSec=5
+SuccessExitStatus=255
+
+[Install]
+WantedBy=multi-user.target

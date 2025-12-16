@@ -1,0 +1,5 @@
+# Webcam HLS service udev rules
+# Triggers webcam-hls.service when the webcam is plugged in/removed
+ACTION=="add", SUBSYSTEM=="video4linux", ATTR{index}=="0", ATTRS{idVendor}=="__VENDOR__", ATTRS{idProduct}=="__PRODUCT__", TAG+="systemd", ENV{SYSTEMD_WANTS}+="webcam-hls.service"
+ACTION=="add", ATTR{idVendor}=="__VENDOR__", ATTR{idProduct}=="__PRODUCT__", ATTR{power/control}="on"
+ACTION=="remove", SUBSYSTEM=="video4linux", ENV{ID_VENDOR_ID}=="__VENDOR__", ENV{ID_MODEL_ID}=="__PRODUCT__", RUN+="/usr/bin/systemctl stop webcam-hls.service"
